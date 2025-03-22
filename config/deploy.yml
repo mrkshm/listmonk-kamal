@@ -1,0 +1,61 @@
+<% require 'yaml'; local = File.exist?('config/local.yml') ? YAML.load_file('config/local.yml') : {} %>
+service: <%= local['service_name'] || 'listmonk' %>
+
+image: <%= local['github_username'] || 'username' %>/listmonk
+
+servers:
+  web:
+    - <%= local['server_ip'] || 'your_server_ip' %>
+
+proxy:
+  ssl: <%= local['ssl_enabled'] || false %>
+  host: <%= local['domain'] || 'your.domain.com' %>
+  healthcheck:
+    path: /health
+    interval: 5
+    timeout: 30
+  app_port: <%= local['app_port'] || 9000 %>
+
+registry:
+  server: ghcr.io
+  username: <%= local['github_username'] || 'your_github_username' %>
+  password:
+    - GITHUB_PAT
+
+env:
+  clear:
+    LISTMONK_app.address: 0.0.0.0:<%= local['app_port'] || 9000 %>
+    LISTMONK_db.host: listmonk-db
+    LISTMONK_db.port: 5432
+    LISTMONK_db.user: <%= local['postgres_user'] || 'listmonk' %>
+    LISTMONK_db.database: <%= local['postgres_db'] || 'listmonk' %>
+    LISTMONK_db.ssl_mode: disable
+    
+  secret:
+    - LISTMONK_db.password
+    - LISTMONK_app.admin_password
+
+accessories:
+  db:
+    image: postgres:<%= local['postgres_version'] || '17' %>
+    host: <%= local['server_ip'] || 'your_server_ip' %>
+    port: "127.0.0.1:<%= local['postgres_external_port'] || '5433' %>:5432"
+    volumes:
+      - listmonk_db:/var/lib/postgresql/data
+    env:
+      clear:
+        POSTGRES_USER: <%= local['postgres_user'] || 'listmonk' %>
+        POSTGRES_DB: <%= local['postgres_db'] || 'listmonk' %>
+      secret:
+        - POSTGRES_PASSWORD
+    options:
+      health-cmd: pg_isready
+      health-interval: 5s
+      health-retries: 5
+      health-timeout: 5s
+
+volumes:
+  - 'listmonk_db:/var/lib/postgresql/data'
+
+builder:
+  arch: amd64

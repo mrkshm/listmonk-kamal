@@ -1,0 +1,8 @@
+# Local configuration
+config/local.yml
+
+# Kamal secrets
+.kamal/secrets
+
+# macOS system files
+.DS_Store

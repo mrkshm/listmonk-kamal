@@ -1,0 +1,10 @@
+service_name: listmonk
+server_ip: your_server_ip
+domain: your.domain.com
+github_username: your_github_username
+ssl_enabled: false
+postgres_version: "17"
+postgres_external_port: "5433"
+postgres_user: listmonk
+postgres_db: listmonk
+app_port: 9000
